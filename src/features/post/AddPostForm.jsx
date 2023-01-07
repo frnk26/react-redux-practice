@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { selectAllUsers } from '../users/userSlice';
-import { addPost } from './postSlice';
+import { addNewPost } from './postSlice';
 
 const AddPostForm = () => {
     const [title, setTitle] = useState('')
     const [content, setContent] = useState('')
     const [userId, setUserId] = useState('')
+    const [addRequest, setAddRequest] = useState('idle')
 
     const users = useSelector(selectAllUsers)
 
@@ -17,17 +18,28 @@ const AddPostForm = () => {
     const onContentChanged = e => setContent(e.target.value)
     const onAuthorChanged = e => setUserId(e.target.value)
 
+
+    const canSave = [title, content, userId].every(Boolean) && addRequest === "idle";
+
     // function that trigger the button to save posts in postslice(addPost)
     const onSaveClick = () => {
-        if (title && content) {
-            dispatch(
-                addPost(title, content, userId)
-            )
+        if (canSave) {
+            try {
+                setAddRequest('pending')
+                dispatch(addNewPost({ title, body: content, userId })).unwrap()
+                setTitle('')
+                setContent('')
+                setContent('')
+                setUserId('')
+            } catch (err) {
+                console.error("failed to add")
+            }
+            finally {
+                setAddRequest('idle')
+            }
         }
-        setTitle('')
-        setContent('')
     }
-    const canSave = Boolean(title) && Boolean(content) && Boolean(userId)
+
 
 
     // renderer map then get individual user objects
